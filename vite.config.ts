@@ -13,5 +13,12 @@ export default defineConfig({
             external: ['cpu-features', ...builtinModules, ...builtinModules.map((module) => `node:${module}`)],
         },
     },
-    plugins: [dts({ include: ['src'] })],
+    plugins: [
+        dts({
+            bundleTypes: {
+                bundledPackages: ['ssh2', '@types/ssh2'],
+            },
+            include: ['src'],
+        }),
+    ],
 })
