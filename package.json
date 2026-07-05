@@ -1,19 +1,24 @@
 {
     "name": "@mimic-behavior/ssh2",
+    "version": "0.0.1",
+    "homepage": "https://github.com/Mimic-Behavior/ssh2",
+    "license": "MIT",
+    "author": "Aleksei Saenko",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Mimic-Behavior/ssh2.git"
+    },
     "files": [
-        "./bin",
         "./dist"
     ],
     "type": "module",
-    "main": "./dist/index.mjs",
-    "types": "./dist/index.d.mts",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
     "exports": {
-        ".": "./dist/index.mjs",
-        "./package.json": "./package.json"
+        ".": "./dist/index.js"
     },
     "scripts": {
-        "build": "vite build",
-        "dev": "vite"
+        "build": "vite build"
     },
     "dependencies": {
         "ssh2": "^1.17.0"

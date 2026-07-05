@@ -6,7 +6,15 @@ import {
     Client as Ssh2Client,
     type Stats,
     type TransferOptions,
+    utils,
 } from 'ssh2'
+
+type ExecResult = {
+    code?: number
+    signal?: string
+    stderr: string
+    stdout: string
+}
 
 class Client {
     sftpSession?: SFTPWrapper
@@ -64,13 +72,58 @@ class Client {
         return this.ssh2.end()
     }
 
-    exec(command: string, options: ExecOptions = {}): Promise<ClientChannel> {
+    async exec(command: string, options: ExecOptions = {}): Promise<ExecResult> {
+        const channel = await new Promise<ClientChannel>((resolve, reject) => {
+            this.ssh2.exec(command, options, (err, ch) => {
+                if (err) reject(err)
+                else resolve(ch)
+            })
+        })
+
+        const stdoutChunks: Buffer[] = []
+        const stderrChunks: Buffer[] = []
+
+        function onStdoutData(chunk: Buffer) {
+            stdoutChunks.push(chunk)
+        }
+
+        function onStderrData(chunk: Buffer) {
+            stderrChunks.push(chunk)
+        }
+
+        function cleanup() {
+            channel.off('data', onStdoutData)
+            channel.stderr.off('data', onStderrData)
+        }
+
         return new Promise((resolve, reject) => {
-            this.ssh2.exec(command, options, (err, channel) => {
-                if (err) {
-                    reject(err)
+            channel.on('data', onStdoutData)
+            channel.stderr.on('data', onStderrData)
+            channel.once('error', (...args: unknown[]) => {
+                cleanup()
+                reject(...args)
+            })
+            channel.once('close', (code?: number, signal?: string) => {
+                cleanup()
+                resolve({
+                    code,
+                    signal,
+                    stderr: Buffer.concat(stderrChunks).toString('utf8'),
+                    stdout: Buffer.concat(stdoutChunks).toString('utf8'),
+                })
+            })
+        })
+    }
+
+    async exists(path: string): Promise<void> {
+        const sftp = await this.sftp()
+
+        return new Promise((resolve, reject) => {
+            sftp.exists(path, (hasError) => {
+                if (hasError) {
+                    reject()
                 } else {
-                    resolve(channel)
+                    resolve()
                 }
             })
         })
@@ -118,6 +171,20 @@ class Client {
         })
     }
 
+    async realpath(path: string): Promise<string> {
+        const sftp = await this.sftp()
+
+        return new Promise((resolve, reject) => {
+            sftp.realpath(path, (err, absPath) => {
+                if (err) {
+                    reject(err)
+                } else {
+                    resolve(absPath)
+                }
+            })
+        })
+    }
+
     sftp(): Promise<SFTPWrapper> {
         if (this.sftpSession) {
             return Promise.resolve(this.sftpSession)
@@ -150,8 +217,8 @@ class Client {
     }
 }
 
-export { Client }
+export { Client, utils }
 
-export type { ClientChannel, ConnectConfig, ExecOptions, SFTPWrapper, Stats, TransferOptions }
+export type { ClientChannel, ConnectConfig, ExecOptions, ExecResult, SFTPWrapper, Stats, TransferOptions }
 
 export default Client
