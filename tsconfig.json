@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "isolatedModules": true,
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "verbatimModuleSyntax": true
+    }
+}
