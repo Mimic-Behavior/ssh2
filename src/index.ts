@@ -2,11 +2,15 @@ import {
     type ClientChannel,
     type ConnectConfig,
     type ExecOptions,
+    type ReadStream,
+    type ReadStreamOptions,
     type SFTPWrapper,
     Client as Ssh2Client,
     type Stats,
     type TransferOptions,
     utils,
+    type WriteStream,
+    type WriteStreamOptions,
 } from 'ssh2'
 
 type ExecResult = {
@@ -68,6 +72,18 @@ class Client {
         })
     }
 
+    async createReadStream(path: string, options: ReadStreamOptions = {}): Promise<ReadStream> {
+        const sftp = await this.sftp()
+
+        return sftp.createReadStream(path, options)
+    }
+
+    async createWriteStream(path: string, options: WriteStreamOptions = {}): Promise<WriteStream> {
+        const sftp = await this.sftp()
+
+        return sftp.createWriteStream(path, options)
+    }
+
     end() {
         return this.ssh2.end()
     }
@@ -99,10 +115,6 @@ class Client {
         return new Promise((resolve, reject) => {
             channel.on('data', onStdoutData)
             channel.stderr.on('data', onStderrData)
-            channel.once('error', (...args: unknown[]) => {
-                cleanup()
-                reject(...args)
-            })
             channel.once('close', (code?: number, signal?: string) => {
                 cleanup()
                 resolve({
@@ -111,6 +123,10 @@ class Client {
                     stderr: Buffer.concat(stderrChunks).toString('utf8'),
                     stdout: Buffer.concat(stdoutChunks).toString('utf8'),
                 })
+            })
+            channel.once('error', (...args: unknown[]) => {
+                cleanup()
+                reject(...args)
             })
         })
     }
@@ -219,6 +235,18 @@ class Client {
 
 export { Client, utils }
 
-export type { ClientChannel, ConnectConfig, ExecOptions, ExecResult, SFTPWrapper, Stats, TransferOptions }
+export type {
+    ClientChannel,
+    ConnectConfig,
+    ExecOptions,
+    ExecResult,
+    ReadStream,
+    ReadStreamOptions,
+    SFTPWrapper,
+    Stats,
+    TransferOptions,
+    WriteStream,
+    WriteStreamOptions,
+}
 
 export default Client
