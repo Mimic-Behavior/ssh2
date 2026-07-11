@@ -1,6 +1,6 @@
 {
     "name": "@mimic-behavior/ssh2",
-    "version": "0.0.2",
+    "version": "0.1.0",
     "homepage": "https://github.com/Mimic-Behavior/ssh2",
     "license": "MIT",
     "author": "Aleksei Saenko",
