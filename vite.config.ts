@@ -10,7 +10,7 @@ export default defineConfig({
             formats: ['es'],
         },
         rolldownOptions: {
-            external: ['cpu-features', 'ssh2', ...builtinModules, ...builtinModules.map((module) => `node:${module}`)],
+            external: ['ssh2', ...builtinModules, ...builtinModules.map((module) => `node:${module}`)],
         },
     },
     plugins: [
